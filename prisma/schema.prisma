@@ -1,0 +1,95 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  // ① providerを "postgresql" に書き換える
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  // ② directURLを追加する
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id                  String         @id @default(uuid())
+  email               String         @unique
+  username            String         @unique
+  password            String
+  avatarUrl           String?       @map("avatar_url")
+  bio                 String?
+  createdAt           DateTime       @default(now()) @map("created_at")
+  pushNotifications   Boolean        @default(false) @map("push_notifications")
+  emailNotifications  Boolean        @default(false) @map("email_notifications")
+  reminders           Boolean        @default(false)
+  posts               Post[]
+  likes               Like[]
+  comments            Comment[]
+  notifications       Notification[]
+
+  @@map("users")
+}
+
+model Post {
+  id            String      @id @default(uuid())
+  userId        String      @map("user_id")
+  title         String
+  description   String?
+  mediaUrl      String      @map("media_url")
+  mediaType     String      @map("media_type")
+  tags          String[]
+  createdAt     DateTime    @default(now()) @map("created_at")
+  likeCount     Int         @default(0) @map("like_count")
+  commentCount  Int         @default(0) @map("comment_count")
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  likes         Like[]
+  comments      Comment[]
+
+  @@map("posts")
+}
+
+model Like {
+  id        String   @id @default(uuid())
+  postId    String   @map("post_id")
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@map("likes")
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  postId    String   @map("post_id")
+  userId    String   @map("user_id")
+  content   String
+  createdAt DateTime @default(now()) @map("created_at")
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("comments")
+}
+
+model Notification {
+  id          String   @id @default(uuid())
+  recipientId String   @map("recipient_id")
+  type        String
+  content     String
+  isRead      Boolean  @default(false) @map("is_read")
+  createdAt   DateTime @default(now()) @map("created_at")
+  recipient   User     @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model AllowedEmail {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("allowed_emails")
+}
