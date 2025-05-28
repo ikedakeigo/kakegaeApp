@@ -1,48 +1,53 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
-import Image from "next/image"
-import Link from "next/link"
-import { format } from "date-fns"
-import { Heart, MessageCircle, MoreHorizontal } from "lucide-react"
-import { Card } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { useToast } from "@/hooks/use-toast"
-import { Database } from "@/lib/database.types"
+import { useEffect, useState } from "react";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import Image from "next/image";
+import Link from "next/link";
+import { format } from "date-fns";
+import { Heart, MessageCircle, MoreHorizontal } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useToast } from "@/hooks/use-toast";
+import { Database } from "@/lib/database.types";
 
-type Post = Database['public']['Tables']['posts']['Row']
+type Post = Database["public"]["Tables"]["posts"]["Row"];
 
-export function UserPosts({ userId }: { userId: string }) {
-  const [posts, setPosts] = useState<Post[]>([])
-  const [loading, setLoading] = useState(true)
-  const { toast } = useToast()
-  const supabase = createClientComponentClient<Database>()
-  
+const UserPosts = ({ userId }: { userId: string }) => {
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+  const supabase = createClientComponentClient<Database>();
+
   useEffect(() => {
     const fetchPosts = async () => {
       try {
         const { data, error } = await supabase
-          .from('posts')
-          .select('*')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false })
-        
-        if (error) throw error
-        
-        setPosts(data || [])
+          .from("posts")
+          .select("*")
+          .eq("user_id", userId)
+          .order("created_at", { ascending: false });
+
+        if (error) throw error;
+
+        setPosts(data || []);
       } catch (error) {
-        console.error('Error fetching posts:', error)
+        console.error("Error fetching posts:", error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
-    
-    fetchPosts()
-  }, [userId, supabase])
-  
+    };
+
+    fetchPosts();
+  }, [userId, supabase]);
+
   const handleDelete = async (postId: string) => {
     try {
       // Delete post
@@ -50,24 +55,24 @@ export function UserPosts({ userId }: { userId: string }) {
       //   .from('posts')
       //   .delete()
       //   .eq('id', postId)
-      
+
       // if (error) throw error
-      
-      setPosts(posts.filter(post => post.id !== postId))
-      
+
+      setPosts(posts.filter((post) => post.id !== postId));
+
       toast({
         title: "Post deleted",
         description: "Your post has been deleted successfully.",
-      })
+      });
     } catch (error: any) {
       toast({
         title: "Error",
         description: error.message || "Failed to delete post",
         variant: "destructive",
-      })
+      });
     }
-  }
-  
+  };
+
   if (loading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
@@ -75,29 +80,29 @@ export function UserPosts({ userId }: { userId: string }) {
           <Skeleton key={i} className="aspect-square rounded-md" />
         ))}
       </div>
-    )
+    );
   }
-  
+
   if (posts.length === 0) {
     return (
       <Card className="p-8 text-center">
-        <h3 className="text-xl font-semibold mb-2">No posts yet</h3>
+        <h3 className="text-xl font-semibold mb-2">まだ投稿はありません</h3>
         <p className="text-muted-foreground mb-6">
-          You haven't created any posts yet. Start capturing your journey!
+          まだ投稿を作成していません。旅の様子を記録し始めましょう！
         </p>
         <Button asChild>
           <Link href="/new">Create your first post</Link>
         </Button>
       </Card>
-    )
+    );
   }
-  
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
       {posts.map((post) => {
-        const createdAt = new Date(post.created_at)
-        const formattedDate = format(createdAt, "MMM d, yyyy")
-        
+        const createdAt = new Date(post.created_at);
+        const formattedDate = format(createdAt, "MMM d, yyyy");
+
         return (
           <div key={post.id} className="group relative">
             <Link href={`/post/${post.id}`}>
@@ -137,7 +142,7 @@ export function UserPosts({ userId }: { userId: string }) {
                   <DropdownMenuItem asChild>
                     <Link href={`/post/${post.id}`}>View</Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     className="text-destructive"
                     onClick={() => handleDelete(post.id)}
                   >
@@ -147,8 +152,10 @@ export function UserPosts({ userId }: { userId: string }) {
               </DropdownMenu>
             </div>
           </div>
-        )
+        );
       })}
     </div>
-  )
-}
+  );
+};
+
+export default UserPosts;
